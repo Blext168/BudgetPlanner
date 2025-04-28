@@ -1,0 +1,116 @@
+﻿@page "/budgetCalculator"
+@using BudgetPlanner.Cache
+@using BudgetPlanner.Interfaces
+@using BudgetPlanner.Manager
+@using BudgetPlanner.Model
+@using MudBlazor
+
+<h1>Ein-/ Ausgaben-Tracker</h1>
+
+<p>Hier kannst du Einnahmen und Ausgaben verwalten.</p>
+
+@if (expenses == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tag</th>
+                <th>Name</th>
+                <th>Betrag (€)</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var expense in expenses)
+            {
+                <tr>
+                    <td>@expense.DayInMonth.ToString("00.")</td>
+                    <td>@expense.Name</td>
+                    <td class="@GetAmountClass(expense.Amount)">@expense.Amount.ToString("0.00") €</td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="() => RemoveExpense(expense)">🗑️</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@* Eingabefelder *@
+<div class="mt-3">
+    <input type="number" placeholder="Tag" class="form-control mb-2" @bind="newExpense.DayInMonth" step="1" min="1" max="28" />
+    <input type="text" placeholder="Name" class="form-control mb-2" @bind="newExpense.Name" />
+    <input type="number" placeholder="Betrag" class="form-control mb-2" @bind="newExpense.Amount" step="0.01" />
+    <button class="btn btn-primary" @onclick="AddExpense">➕ Hinzufügen</button>
+</div>
+
+@* Gesamtbetrag *@
+<div class="mt-4 font-weight-bold">
+    Gesamtbetrag: <span class="@GetAmountClass(expenses is null ? 0 : expenses.Sum(e => e.Amount))">@expenses?.Sum(e => e.Amount).ToString("0.00") €</span>
+</div>
+
+@code {
+    private List<Expense> expenses = new List<Expense>();
+    private Expense newExpense = new();
+    private readonly IExpenseManager expenseManager;
+
+    public BudgetCalculator()
+    {
+        expenseManager = new ExpenseManager();
+    }
+
+    protected override void OnInitialized()
+    {
+        IEnumerable<Expense> expensesFromDb = expenseManager.LoadAllExpensesByUser(); 
+        expenses = [.. expensesFromDb];
+
+        if (expensesFromDb.Count().Equals(0))
+            expenses = new List<Expense>();
+    }
+
+    private void AddExpense()
+    {
+        if (!string.IsNullOrWhiteSpace(newExpense.Name))
+        {
+            Expense expense = new Expense 
+            { 
+                Name = newExpense.Name, 
+                Amount = newExpense.Amount, 
+                UserId = UserCache.UserId 
+            };
+
+            // Add to grid
+            expenses.Add(expense);
+
+            // Add to DB
+            if (!expenseManager.AddExpenseToDb(expense))
+                ShowAndLogError();
+
+            newExpense = new Expense();
+        }
+    }
+
+    private void RemoveExpense(Expense expense)
+    {
+        // Remove from grid
+        expenses.Remove(expense);
+
+        // Delete on DB
+        if (!expenseManager.DeleteExpenseFromDb(expense))
+            ShowAndLogError();
+    }
+
+    private string GetAmountClass(decimal amount)
+        => amount < 0 ? "text-danger font-weight-bold" : "text-success font-weight-bold";
+
+    private async void ShowAndLogError()
+    {
+        DialogService service = new();
+        await service.ShowMessageBox("Fehler", "Es ist zu einem Fehler gekommen.\r\nBitte probieren Sie es später noch einmal.");
+        //TODO: Log error & Show Exception
+    }
+}

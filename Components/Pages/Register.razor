@@ -1,0 +1,105 @@
+﻿@page "/register"
+@using BudgetPlanner.Interfaces
+@using BudgetPlanner.Manager
+@using BudgetPlanner.Model
+
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="card shadow p-4 mx-auto" style="max-width: 400px;">
+        <h2 class="text-center">Willkommen!</h2>
+        <p class="text-center">Erstelle jetzt ein Konto und starte durch.</p>
+
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" @bind="user.Name" placeholder="Dein Name" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">E-Mail-Adresse</label>
+            <input type="email" class="form-control" @bind="user.Email" placeholder="E-Mail eingeben" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Passwort</label>
+            <input type="password" class="form-control" @bind="user.Password" placeholder="Passwort erstellen" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Passwort wiederholen</label>
+            <input type="password" class="form-control" @bind="user.Password2" placeholder="Passwort wiederholen" />
+        </div>
+
+        <button class="btn custom-btn w-100" @onclick="RegisterUser">Registrieren</button>
+
+        <p class="mt-3 text-center text-success">@message</p>
+
+        <p class="mt-3 text-center">
+            Hast du schon ein Konto? <a href="/">Jetzt anmelden</a>
+        </p>
+    </div>
+</div>
+
+@code {
+    private UserUi user = new();
+    private string message = string.Empty;
+
+    private readonly IUserManager userManager;
+
+    public Register()
+    {
+        userManager = new UserManager();
+    }
+
+    private async void RegisterUser()
+    {
+        if (string.IsNullOrWhiteSpace(user.Name)
+            || string.IsNullOrWhiteSpace(user.Email)
+            || string.IsNullOrWhiteSpace(user.Password)
+            || string.IsNullOrWhiteSpace(user.Password2))
+        {
+            message = "Bitte fülle alle Felder aus!";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(user.Password)
+            || string.IsNullOrWhiteSpace(user.Password2)
+            || user.Password != user.Password2)
+        {
+            message = "Das Passwort muss übereinstimmen!";
+            return;
+        }
+
+        bool nameAvailable = await userManager.UsernameAvailableAsync(user.Name);
+        if (!nameAvailable)
+        {
+            message = "Der Name ist bereits vergeben";
+            return;
+        }
+
+        bool succesful = await userManager.RegisterUserAsync(new User()
+            {
+                Name = user.Name,
+                Email = user.Email,
+                Password = user.Password
+            });
+
+        if (succesful)
+        {
+            message = "Registrierung erfolgreich! 🎉";
+            await userManager.LogInUserAsync(user.Name, user.Password);
+            // Swith to Home-Page
+            Navigation.NavigateTo("/home");
+        }
+        else
+            message = "Es ist ein Fehler bei der Registrierung aufgetreten.";
+    }
+
+    private class UserUi
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Password2 { get; set; } = string.Empty;
+    }
+}
