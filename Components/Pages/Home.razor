@@ -1,4 +1,7 @@
 ﻿@page "/home"
+@using BudgetPlanner.Cache
+
+@inject NavigationManager Navigation
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -13,3 +16,17 @@
         </div>
     </div>
 </div>
+
+@code{
+    protected override async void OnInitialized()
+    {
+        if (UserCache.UserId <= 0)
+        {
+            await Application.Current.MainPage.DisplayAlert("Nicht möglich",
+                "Du musst eingeloggt sein, um diese Seite nutzen zu können.",
+                "Okay");
+
+            Navigation.NavigateTo("/");
+        }
+    }
+}

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetPlanner.Manager
 {
-    internal class UserManager : IUserManager
+    public class UserManager : IUserManager
     {
         public async Task<bool> LogInUserAsync(string pUsername, string pPassword)
         {
@@ -61,6 +61,12 @@ namespace BudgetPlanner.Manager
             {
                 return false;
             }
+        }
+        
+        public async Task LogoffUser()
+        {
+            UserCache.Clear();
+            await Task.CompletedTask;
         }
 
         public static string HashPassword(string pPassword)

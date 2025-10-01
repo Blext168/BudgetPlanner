@@ -2,7 +2,7 @@
 
 namespace BudgetPlanner.Interfaces
 {
-    internal interface IExpenseManager
+    public interface IExpenseManager
     {
         bool AddExpenseToDb(Expense pExpense);
         bool DeleteExpenseFromDb(Expense pExpenseId);

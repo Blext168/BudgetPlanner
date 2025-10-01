@@ -1,7 +1,9 @@
 ﻿@page "/register"
+@using BudgetPlanner.Cache
 @using BudgetPlanner.Interfaces
 @using BudgetPlanner.Manager
 @using BudgetPlanner.Model
+@using Microsoft.AspNetCore.Components
 
 @inject NavigationManager Navigation
 
@@ -12,27 +14,27 @@
 
         <div class="mb-3">
             <label class="form-label">Name</label>
-            <input type="text" class="form-control" @bind="user.Name" placeholder="Dein Name" />
+            <input type="text" class="form-control" @bind="_user.Name" placeholder="Dein Name" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">E-Mail-Adresse</label>
-            <input type="email" class="form-control" @bind="user.Email" placeholder="E-Mail eingeben" />
+            <input type="email" class="form-control" @bind="_user.Email" placeholder="E-Mail eingeben" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Passwort</label>
-            <input type="password" class="form-control" @bind="user.Password" placeholder="Passwort erstellen" />
+            <input type="password" class="form-control" @bind="_user.Password" placeholder="Passwort erstellen" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Passwort wiederholen</label>
-            <input type="password" class="form-control" @bind="user.Password2" placeholder="Passwort wiederholen" />
+            <input type="password" class="form-control" @bind="_user.Password2" placeholder="Passwort wiederholen" />
         </div>
 
         <button class="btn custom-btn w-100" @onclick="RegisterUser">Registrieren</button>
 
-        <p class="mt-3 text-center text-success">@message</p>
+        <p class="mt-3 text-center text-success">@_message</p>
 
         <p class="mt-3 text-center">
             Hast du schon ein Konto? <a href="/">Jetzt anmelden</a>
@@ -41,58 +43,75 @@
 </div>
 
 @code {
-    private UserUi user = new();
-    private string message = string.Empty;
+    private UserUi _user = new();
+    private string _message = string.Empty;
 
-    private readonly IUserManager userManager;
+    private readonly IUserManager _userManager;
 
-    public Register()
+    public Register(IUserManager userManager)
     {
-        userManager = new UserManager();
+        _userManager = userManager;
+    }
+
+    protected override async void OnInitialized()
+    {
+        if (UserCache.UserId > 0)
+        {
+            bool Logoff = await Application.Current.MainPage.DisplayAlert(
+                title: "Nicht möglich",
+                message: "Du musst dich abmelden um auf der Seite fortzufahren. Möchtest du dich abmelden?",
+                accept: "Ja",
+                cancel: "Nein");
+
+            if (Logoff)
+                await _userManager.LogoffUser();
+            else
+                Navigation.NavigateTo("/home");
+        }
     }
 
     private async void RegisterUser()
     {
-        if (string.IsNullOrWhiteSpace(user.Name)
-            || string.IsNullOrWhiteSpace(user.Email)
-            || string.IsNullOrWhiteSpace(user.Password)
-            || string.IsNullOrWhiteSpace(user.Password2))
+        if (string.IsNullOrWhiteSpace(_user.Name)
+            || string.IsNullOrWhiteSpace(_user.Email)
+            || string.IsNullOrWhiteSpace(_user.Password)
+            || string.IsNullOrWhiteSpace(_user.Password2))
         {
-            message = "Bitte fülle alle Felder aus!";
+            _message = "Bitte fülle alle Felder aus!";
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(user.Password)
-            || string.IsNullOrWhiteSpace(user.Password2)
-            || user.Password != user.Password2)
+        if (string.IsNullOrWhiteSpace(_user.Password)
+            || string.IsNullOrWhiteSpace(_user.Password2)
+            || _user.Password != _user.Password2)
         {
-            message = "Das Passwort muss übereinstimmen!";
+            _message = "Das Passwort muss übereinstimmen!";
             return;
         }
 
-        bool nameAvailable = await userManager.UsernameAvailableAsync(user.Name);
+        bool nameAvailable = await _userManager.UsernameAvailableAsync(_user.Name);
         if (!nameAvailable)
         {
-            message = "Der Name ist bereits vergeben";
+            _message = "Der Name ist bereits vergeben";
             return;
         }
 
-        bool succesful = await userManager.RegisterUserAsync(new User()
+        bool succesful = await _userManager.RegisterUserAsync(new User()
             {
-                Name = user.Name,
-                Email = user.Email,
-                Password = user.Password
+                Name = _user.Name,
+                Email = _user.Email,
+                Password = _user.Password
             });
 
         if (succesful)
         {
-            message = "Registrierung erfolgreich! 🎉";
-            await userManager.LogInUserAsync(user.Name, user.Password);
+            _message = "Registrierung erfolgreich! 🎉";
+            await _userManager.LogInUserAsync(_user.Name, _user.Password);
             // Swith to Home-Page
             Navigation.NavigateTo("/home");
         }
         else
-            message = "Es ist ein Fehler bei der Registrierung aufgetreten.";
+            _message = "Es ist ein Fehler bei der Registrierung aufgetreten.";
     }
 
     private class UserUi

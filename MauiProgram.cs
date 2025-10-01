@@ -1,4 +1,6 @@
-﻿using BudgetPlanner.Model;
+﻿using BudgetPlanner.Interfaces;
+using BudgetPlanner.Manager;
+using BudgetPlanner.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +24,10 @@ namespace BudgetPlanner
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
+            
+            builder.Services.AddScoped<IExpenseManager, ExpenseManager>();
+            builder.Services.AddScoped<IUserManager, UserManager>();
+            
             return builder.Build();
         }
     }

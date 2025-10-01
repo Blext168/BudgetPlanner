@@ -10,5 +10,11 @@ namespace BudgetPlanner.Cache
     {
         public static int UserId { get; set; }
         public static string? Username { get; set; }
+
+        public static void Clear()
+        {
+            UserId = 0;
+            Username = null;
+        }
     }
 }

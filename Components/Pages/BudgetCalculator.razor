@@ -1,15 +1,16 @@
 ﻿@page "/budgetCalculator"
 @using BudgetPlanner.Cache
 @using BudgetPlanner.Interfaces
-@using BudgetPlanner.Manager
 @using BudgetPlanner.Model
 @using MudBlazor
 
+@inject NavigationManager Navigation
+
 <h1>Ein-/ Ausgaben-Tracker</h1>
 
-<p>Hier kannst du Einnahmen und Ausgaben verwalten.</p>
+<p>Hier kannst du Einnahmen und Ausgaben des aktuellen Monats verwalten.</p>
 
-@if (expenses == null)
+@if (_expenses == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -21,16 +22,18 @@ else
                 <th>Tag</th>
                 <th>Name</th>
                 <th>Betrag (€)</th>
+                <th>Einmalig/Monatlich</th>  
                 <th>Aktion</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var expense in expenses)
+            @foreach (var expense in _expenses)
             {
                 <tr>
                     <td>@expense.DayInMonth.ToString("00.")</td>
                     <td>@expense.Name</td>
                     <td class="@GetAmountClass(expense.Amount)">@expense.Amount.ToString("0.00") €</td>
+                    <td>@GetOneTimeString(expense.OneTime)</td>
                     <td>
                         <button class="btn btn-danger" @onclick="() => RemoveExpense(expense)">🗑️</button>
                     </td>
@@ -42,65 +45,81 @@ else
 
 @* Eingabefelder *@
 <div class="mt-3">
-    <input type="number" placeholder="Tag" class="form-control mb-2" @bind="newExpense.DayInMonth" step="1" min="1" max="28" />
-    <input type="text" placeholder="Name" class="form-control mb-2" @bind="newExpense.Name" />
-    <input type="number" placeholder="Betrag" class="form-control mb-2" @bind="newExpense.Amount" step="0.01" />
+    <input type="number" placeholder="Tag" class="form-control mb-2" @bind="_newExpense.DayInMonth" step="1" min="1" max="28" />
+    <input type="text" placeholder="Name" class="form-control mb-2" @bind="_newExpense.Name" />
+    <input type="number" placeholder="Betrag" class="form-control mb-2" @bind="_newExpense.Amount" step="0.01" />
+    <div class="form-check mb-2">
+        <input type="checkbox" class="form-check-input" id="oneTimeCheckbox" @bind="_newExpense.OneTime" />
+        <label class="form-check-label" for="oneTimeCheckbox">Einmalige Zahlung?</label>
+    </div>
     <button class="btn btn-primary" @onclick="AddExpense">➕ Hinzufügen</button>
 </div>
 
 @* Gesamtbetrag *@
 <div class="mt-4 font-weight-bold">
-    Gesamtbetrag: <span class="@GetAmountClass(expenses is null ? 0 : expenses.Sum(e => e.Amount))">@expenses?.Sum(e => e.Amount).ToString("0.00") €</span>
+    Übriger Gesamtbetrag: <span class="@GetAmountClass(_expenses is null ? 0 : _expenses.Sum(e => e.Amount))">@_expenses?.Sum(e => e.Amount).ToString("0.00") €</span>
 </div>
 
 @code {
-    private List<Expense> expenses = new List<Expense>();
-    private Expense newExpense = new();
-    private readonly IExpenseManager expenseManager;
+    private List<Expense> _expenses = [];
+    private Expense _newExpense = new();
+    private readonly IExpenseManager _expenseManager;
 
-    public BudgetCalculator()
+    public BudgetCalculator(IExpenseManager expenseManager)
     {
-        expenseManager = new ExpenseManager();
+        _expenseManager = expenseManager;
     }
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-        IEnumerable<Expense> expensesFromDb = expenseManager.LoadAllExpensesByUser(); 
-        expenses = [.. expensesFromDb];
+        if (UserCache.UserId <= 0)
+        {
+            await Application.Current.MainPage.DisplayAlert("Nicht möglich",
+                "Du musst eingeloggt sein, um diese Seite nutzen zu können.",
+                "Okay");
+
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        IEnumerable<Expense> expensesFromDb = _expenseManager.LoadAllExpensesByUser(); 
+        _expenses = [.. expensesFromDb];
 
         if (expensesFromDb.Count().Equals(0))
-            expenses = new List<Expense>();
+            _expenses = new List<Expense>();
     }
 
     private void AddExpense()
     {
-        if (!string.IsNullOrWhiteSpace(newExpense.Name))
+        if (!string.IsNullOrWhiteSpace(_newExpense.Name))
         {
             Expense expense = new Expense 
             { 
-                Name = newExpense.Name, 
-                Amount = newExpense.Amount, 
-                UserId = UserCache.UserId 
+                Name = _newExpense.Name, 
+                Amount = _newExpense.Amount, 
+                UserId = UserCache.UserId,
+                OneTime = _newExpense.OneTime,
+                MonthOfExpense = _newExpense.OneTime is true ? DateTime.Now.Date : null
             };
 
             // Add to grid
-            expenses.Add(expense);
+            _expenses.Add(expense);
 
             // Add to DB
-            if (!expenseManager.AddExpenseToDb(expense))
+            if (!_expenseManager.AddExpenseToDb(expense))
                 ShowAndLogError();
 
-            newExpense = new Expense();
+            _newExpense = new Expense();
         }
     }
 
     private void RemoveExpense(Expense expense)
     {
         // Remove from grid
-        expenses.Remove(expense);
+        _expenses.Remove(expense);
 
         // Delete on DB
-        if (!expenseManager.DeleteExpenseFromDb(expense))
+        if (!_expenseManager.DeleteExpenseFromDb(expense))
             ShowAndLogError();
     }
 
@@ -113,4 +132,7 @@ else
         await service.ShowMessageBox("Fehler", "Es ist zu einem Fehler gekommen.\r\nBitte probieren Sie es später noch einmal.");
         //TODO: Log error & Show Exception
     }
+
+    private string GetOneTimeString(bool oneTime)
+        => oneTime ? "Einmalige Zahlung" : "Monatliche Zahlung";
 }

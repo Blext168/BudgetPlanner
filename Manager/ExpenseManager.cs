@@ -4,7 +4,7 @@ using BudgetPlanner.Model;
 
 namespace BudgetPlanner.Manager
 {
-    internal class ExpenseManager : IExpenseManager
+    public class ExpenseManager : IExpenseManager
     {
         private static DbModel GetContext() => new();
 
@@ -14,7 +14,8 @@ namespace BudgetPlanner.Manager
             {
                 using DbModel context = GetContext();
                 List<Expense> expenses = [.. context.Expense.Where(w => w.UserId == UserCache.UserId)];
-                return expenses;
+                // Return only monthly expenses or expenses for current month
+                return expenses.Where(w => w.MonthOfExpense?.Month == DateTime.Now.Month && w.OneTime || !w.OneTime);
             }
             catch (Exception)
             {
