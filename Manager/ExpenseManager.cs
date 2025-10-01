@@ -6,13 +6,11 @@ namespace BudgetPlanner.Manager
 {
     public class ExpenseManager : IExpenseManager
     {
-        private static DbModel GetContext() => new();
-
         public IEnumerable<Expense> LoadAllExpensesByUser()
         {
             try
             {
-                using DbModel context = GetContext();
+                using DbModel context = DbModel.GetContext();
                 List<Expense> expenses = [.. context.Expense.Where(w => w.UserId == UserCache.UserId)];
                 // Return only monthly expenses or expenses for current month
                 return expenses.Where(w => w.MonthOfExpense?.Month == DateTime.Now.Month && w.OneTime || !w.OneTime);
@@ -27,7 +25,7 @@ namespace BudgetPlanner.Manager
         {
             try
             {
-                using DbModel context = GetContext();
+                using DbModel context = DbModel.GetContext();
                 context.Expense.Add(pExpense);
                 context.SaveChanges();
 
@@ -43,7 +41,7 @@ namespace BudgetPlanner.Manager
         {
             try
             {
-                using DbModel context = GetContext();
+                using DbModel context = DbModel.GetContext();
                 context.Expense.Remove(pExpenseId);
                 context.SaveChanges();
 

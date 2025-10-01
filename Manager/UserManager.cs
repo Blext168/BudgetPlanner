@@ -11,11 +11,11 @@ namespace BudgetPlanner.Manager
         {
             try
             {
-                using DbModel context = new();
+                using DbModel context = DbModel.GetContext();
                 User? user = await context.User.Where(w => w.Name.Equals(pUsername)).FirstOrDefaultAsync();
 
                 // Verify username and password
-                if (user is null || !VerifyPassword(pPassword, user.Password))
+                if (user is null || !User.VerifyPassword(pPassword, user.Password))
                     return false;
 
                 // Login user
@@ -34,10 +34,10 @@ namespace BudgetPlanner.Manager
             try
             {
                 // Hash Password
-                pUser.Password = HashPassword(pUser.Password);
+                pUser.Password = User.HashPassword(pUser.Password);
 
                 // Add to DB
-                using DbModel context = new();
+                using DbModel context = DbModel.GetContext();
                 await context.User.AddAsync(pUser);
                 await context.SaveChangesAsync();
                 return true;
@@ -52,7 +52,7 @@ namespace BudgetPlanner.Manager
         {
             try
             {
-                using DbModel context = new();
+                using DbModel context = DbModel.GetContext();
                 User? user = await context.User.Where(w => w.Name.Equals(pUsername)).FirstOrDefaultAsync();
 
                 return user is null;
@@ -68,11 +68,5 @@ namespace BudgetPlanner.Manager
             UserCache.Clear();
             await Task.CompletedTask;
         }
-
-        public static string HashPassword(string pPassword)
-            => BCrypt.Net.BCrypt.HashPassword(pPassword);
-
-        public static bool VerifyPassword(string pPassword, string pHashedPassword)
-            => BCrypt.Net.BCrypt.Verify(pPassword, pHashedPassword);
     }
 }

@@ -6,10 +6,15 @@ namespace BudgetPlanner.Model
     {
         public DbSet<User> User { get; set; }
         public DbSet<Expense> Expense { get; set; }
+        public DbSet<Vehicle> Vehicle { get; set; }
 
+        private DbModel() : base() { }
+        
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseMySQL(Properties.Settings.Default.ConnectionString);
         }
+        
+        public static DbModel GetContext() => new();
     }
 }

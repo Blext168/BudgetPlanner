@@ -9,10 +9,11 @@
 
         public string GetData()
             => $"{Id};{Name};{Email};{Password}";
-    }
+        
+        public static string HashPassword(string pPassword)
+            => BCrypt.Net.BCrypt.HashPassword(pPassword);
 
-    public static class LoggedInUser
-    {
-        public static string? Username { get; set; }
+        public static bool VerifyPassword(string pPassword, string pHashedPassword)
+            => BCrypt.Net.BCrypt.Verify(pPassword, pHashedPassword);
     }
 }

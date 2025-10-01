@@ -1,0 +1,196 @@
+﻿@page "/OdoCalculator"
+@using BudgetPlanner.Model
+@using System.ComponentModel.DataAnnotations
+@using BudgetPlanner.Cache
+@using BudgetPlanner.Interfaces
+@using BudgetPlanner.Manager
+@using BudgetPlanner.Result
+@inject NavigationManager Navigation
+
+<h1>Kilometer Rechner</h1>
+<p>Hier kannst du die Fahrleistung von deinen/deinem Auto/Autos verwalten.</p>
+
+<div class="mb-3">
+    <label for="vehicleSelect" class="form-label">Bestehende Fahrzeuge</label>
+    <select id="vehicleSelect" class="form-select" @onchange="OnVehicleChangedAsync">
+        <option value="">-- Neues Fahrzeug anlegen --</option>
+        @foreach (var vehicle in _vehicles)
+        {
+            <option value="@vehicle.Id" selected="@(vehicle.Id == _selectedVehicleId)">@vehicle.LicensePlate</option>
+        }
+    </select>
+</div>
+
+<EditForm Model="_editable" OnValidSubmit="SaveVehicle">
+    <DataAnnotationsValidator/>
+
+    <table class="table table-borderless" style="max-width:700px;">
+        <tbody>
+        <tr>
+            <td style="width:40%">
+                <label class="form-label">Hersteller</label>
+                <div class="form-text">z. B. VW / Volkswagen</div>
+            </td>
+            <td>
+                <InputText class="form-control" @bind-Value="_editable.Manufacturer"/>
+                <ValidationMessage For="() => _editable.Manufacturer"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Modell</label>
+                <div class="form-text">z. B. Golf 3</div>
+            </td>
+            <td>
+                <InputText class="form-control" @bind-Value="_editable.Model"/>
+                <ValidationMessage For="() => _editable.Model"/>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                <label class="form-label">Kennzeichen</label>
+                <div class="form-text">z.B. B-AB 1234</div>
+            </td>
+            <td>
+                <InputText class="form-control" @bind-Value="_editable.LicensePlate"/>
+                <ValidationMessage For="() => _editable.LicensePlate"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Anschaffungsdatum</label>
+                <div class="form-text">Datum des Kaufs</div>
+            </td>
+            <td>
+                <InputDate class="form-control" @bind-Value="_editable.PurchaseDate"/>
+                <ValidationMessage For="() => _editable.PurchaseDate"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Start-Kilometerstand</label>
+                <div class="form-text">Kilometerstand bei Übernahme / Kauf</div>
+            </td>
+            <td>
+                <InputNumber class="form-control" @bind-Value="_editable.InitialOdometer"/>
+                <ValidationMessage For="() => _editable.InitialOdometer"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Aktuelles Datum</label>
+                <div class="form-text">Datum der Messung</div>
+            </td>
+            <td>
+                <InputDate class="form-control" @bind-Value="_editable.CurrentDate"/>
+                <ValidationMessage For="() => _editable.CurrentDate"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Aktueller Kilometerstand</label>
+                <div class="form-text">Kilometerstand heute</div>
+            </td>
+            <td>
+                <InputNumber class="form-control" @bind-Value="_editable.CurrentOdometer"/>
+                <ValidationMessage For="() => _editable.CurrentOdometer"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Fahrleistung pro Jahr</label>
+                <div class="form-text">Wie viele Kilometer im Jahr gefahren werden fürfen.</div>
+            </td>
+            <td>
+                <InputNumber class="form-control" @bind-Value="_editable.KilometersPerYear"/>
+                <ValidationMessage For="() => _editable.KilometersPerYear"/>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    @* <div class="mt-3"> *@
+    @*     <button class="btn btn-primary" type="submit">Speichern</button> *@
+    @*     $1$ <button class="btn btn-secondary ms-2" type="button" @onclick="NewVehicle">Neu</button> #1# *@
+    @*     @if (!string.IsNullOrEmpty(_saveMessage)) *@
+    @*     { *@
+    @*         <div class="mt-2 alert alert-success">@_saveMessage</div> *@
+    @*     } *@
+    @* </div> *@
+
+</EditForm>
+
+@code {
+
+    // In-memory Beispiel-Service; in Ihrer Anwendung ersetzen durch DI-Service/Repository
+    private IEnumerable<Vehicle> _vehicles { get; set; } = [];
+    private Vehicle _editable { get; set; } = new();
+    private int _selectedVehicleId { get; set; }
+
+    private readonly IVehicleManager _vehicleManager;
+    
+    public OdoCalculator(IVehicleManager vehicleManager)
+    {
+        _vehicleManager = vehicleManager;
+    }
+    
+    protected override async void OnInitialized()
+    {
+        if (UserCache.UserId <= 0)
+        {
+            await Application.Current.MainPage.DisplayAlert("Nicht möglich",
+                "Du musst eingeloggt sein, um diese Seite nutzen zu können.",
+                "Okay");
+
+            Navigation.NavigateTo("/");
+            return;
+        }
+        
+        await LoadAllVehicles();
+    }
+
+    private async void OnVehicleChangedAsync(ChangeEventArgs e)
+    {
+        _selectedVehicleId = e.Value is not null ? (int)e.Value : 0;
+
+        // Not need to load
+        if (_selectedVehicleId <= 0)
+            return;
+        
+        VehicleResult result = await _vehicleManager.Load(_selectedVehicleId);
+
+        if (!result.Successful)
+        {
+            await Application.Current.MainPage.DisplayAlert("Fehler", result.ErrorMessage, "Okay");
+            return;
+        }
+
+        if (result.Item != null)
+            // Klonen um Bindungsprobleme zu vermeiden
+            _editable = result.Item.Clone();
+    }
+
+    private async void SaveVehicle()
+    {
+        var result = await _vehicleManager.Save(_editable);
+
+        if (!result.Successful)
+        {
+            await Application.Current.MainPage.DisplayAlert("Fehler", result.ErrorMessage, "Okay");
+            return;
+        }
+        
+        // Aktualisiere lokale Liste
+        await LoadAllVehicles();
+        _selectedVehicleId = _editable.Id;
+    }
+
+    private async Task LoadAllVehicles() => _vehicles = await _vehicleManager.LoadAll(UserCache.UserId);
+}
