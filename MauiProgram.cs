@@ -1,7 +1,5 @@
 ﻿using BudgetPlanner.Interfaces;
 using BudgetPlanner.Manager;
-using BudgetPlanner.Model;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace BudgetPlanner
@@ -26,6 +24,7 @@ namespace BudgetPlanner
 #endif
             
             builder.Services.AddScoped<IExpenseManager, ExpenseManager>();
+            builder.Services.AddScoped<IVehicleManager, VehicleManager>();
             builder.Services.AddScoped<IUserManager, UserManager>();
             
             return builder.Build();
