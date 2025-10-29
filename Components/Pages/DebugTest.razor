@@ -1,0 +1,18 @@
+﻿@using BudgetPlanner.Interfaces
+@page "/debugTest"
+@inject IBiometricService Biometric
+
+
+<h3>Biometrischer Login</h3>
+<button @onclick="LoginAsync">Mit Fingerabdruck / Windows Hello anmelden</button>
+
+@code {
+    private async Task LoginAsync()
+    {
+        bool ok = await Biometric.AuthenticateAsync("Bitte authentifizieren Sie sich");
+        if (ok)
+            Application.Current.MainPage.DisplayAlert("Login", " Anmeldung erfolgreich", "Ok");
+        else
+            Application.Current.MainPage.DisplayAlert("Login", "Authentifizierung fehlgeschlagen oder nicht verfügbar", "Ok");
+    }
+}

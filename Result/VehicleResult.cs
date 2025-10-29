@@ -1,4 +1,4 @@
-﻿using BudgetPlanner.Model;
+﻿using PlannerModel;
 
 namespace BudgetPlanner.Result;
 

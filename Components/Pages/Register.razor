@@ -1,10 +1,8 @@
 ﻿@page "/register"
 @using BudgetPlanner.Cache
 @using BudgetPlanner.Interfaces
-@using BudgetPlanner.Manager
-@using BudgetPlanner.Model
-@using Microsoft.AspNetCore.Components
-
+@using PlannerModel
+@inject IBiometricService Biometric
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -57,13 +55,13 @@
     {
         if (UserCache.UserId > 0)
         {
-            bool Logoff = await Application.Current.MainPage.DisplayAlert(
+            bool logOff = await Application.Current.MainPage.DisplayAlert(
                 title: "Nicht möglich",
                 message: "Du musst dich abmelden um auf der Seite fortzufahren. Möchtest du dich abmelden?",
                 accept: "Ja",
                 cancel: "Nein");
 
-            if (Logoff)
+            if (logOff)
                 await _userManager.LogoffUser();
             else
                 Navigation.NavigateTo("/home");
@@ -96,22 +94,39 @@
             return;
         }
 
-        bool succesful = await _userManager.RegisterUserAsync(new User()
+        bool successful = await _userManager.RegisterUserAsync(new User
             {
                 Name = _user.Name,
                 Email = _user.Email,
                 Password = _user.Password
             });
 
-        if (succesful)
+        if (successful)
         {
             _message = "Registrierung erfolgreich! 🎉";
             await _userManager.LogInUserAsync(_user.Name, _user.Password);
+
+            // Ask for biometric setup
+            if (await Biometric.IsAvailableAsync())
+            {
+                bool enable = await AskUserAsync("Biometrische Anmeldung aktivieren?");
+                if (enable)
+                {
+                    await SecureStorage.SetAsync("biometric_enabled", "true");
+                    await SecureStorage.SetAsync("username", _user.Name);
+                }
+            }
+
             // Swith to Home-Page
             Navigation.NavigateTo("/home");
         }
         else
             _message = "Es ist ein Fehler bei der Registrierung aufgetreten.";
+    }
+
+    private Task<bool> AskUserAsync(string message)
+    {
+        return Application.Current.MainPage.DisplayAlert("Option", message, "Ja", "Nein");
     }
 
     private class UserUi

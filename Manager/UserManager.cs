@@ -2,6 +2,7 @@
 using BudgetPlanner.Interfaces;
 using BudgetPlanner.Model;
 using Microsoft.EntityFrameworkCore;
+using PlannerModel;
 
 namespace BudgetPlanner.Manager
 {
@@ -11,11 +12,35 @@ namespace BudgetPlanner.Manager
         {
             try
             {
-                using DbModel context = DbModel.GetContext();
+                await using DbModel context = DbModel.GetContext();
                 User? user = await context.User.Where(w => w.Name.Equals(pUsername)).FirstOrDefaultAsync();
 
                 // Verify username and password
                 if (user is null || !User.VerifyPassword(pPassword, user.Password))
+                    return false;
+
+                // Login user
+                UserCache.Username = user.Name;
+                UserCache.UserId = user.Id;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> LogInUserAsync(string username, bool biometricLogin)
+        {
+            if (!biometricLogin)
+                return false;
+
+            try
+            {
+                await using DbModel context = DbModel.GetContext();
+                User? user = await context.User.Where(w => w.Name.Equals(username)).FirstOrDefaultAsync();
+
+                if (user is null)
                     return false;
 
                 // Login user
@@ -37,7 +62,7 @@ namespace BudgetPlanner.Manager
                 pUser.Password = User.HashPassword(pUser.Password);
 
                 // Add to DB
-                using DbModel context = DbModel.GetContext();
+                await using DbModel context = DbModel.GetContext();
                 await context.User.AddAsync(pUser);
                 await context.SaveChangesAsync();
                 return true;
@@ -52,7 +77,7 @@ namespace BudgetPlanner.Manager
         {
             try
             {
-                using DbModel context = DbModel.GetContext();
+                await using DbModel context = DbModel.GetContext();
                 User? user = await context.User.Where(w => w.Name.Equals(pUsername)).FirstOrDefaultAsync();
 
                 return user is null;

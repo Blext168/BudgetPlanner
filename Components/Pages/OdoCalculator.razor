@@ -1,8 +1,8 @@
 ﻿@page "/odoCalculator"
-@using BudgetPlanner.Model
 @using BudgetPlanner.Cache
 @using BudgetPlanner.Interfaces
 @using BudgetPlanner.Result
+@using PlannerModel
 @inject NavigationManager Navigation
 
 <h1>Kilometer Rechner</h1>
@@ -129,7 +129,7 @@
 
     // In-memory Beispiel-Service; in Ihrer Anwendung ersetzen durch DI-Service/Repository
     private IEnumerable<Vehicle> _vehicles { get; set; } = [];
-    private Vehicle _editable { get; set; } = new();
+    private Vehicle _editable { get; set; } = new(UserCache.UserId);
     private int _selectedVehicleId { get; set; }
 
     private readonly IVehicleManager _vehicleManager;

@@ -1,6 +1,7 @@
 ﻿using BudgetPlanner.Cache;
 using BudgetPlanner.Interfaces;
 using BudgetPlanner.Model;
+using PlannerModel;
 
 namespace BudgetPlanner.Manager
 {

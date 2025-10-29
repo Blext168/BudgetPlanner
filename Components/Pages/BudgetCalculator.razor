@@ -1,8 +1,9 @@
 ﻿@page "/budgetCalculator"
 @using BudgetPlanner.Cache
 @using BudgetPlanner.Interfaces
-@using BudgetPlanner.Model
 @using MudBlazor
+@using PlannerModel
+@inject IExpenseManager Expense
 @inject NavigationManager Navigation
 
 <h1>Ein-/ Ausgaben-Tracker</h1>
@@ -62,12 +63,6 @@ else
 @code {
     private List<Expense> _expenses = [];
     private Expense _newExpense = new();
-    private readonly IExpenseManager _expenseManager;
-
-    public BudgetCalculator(IExpenseManager expenseManager)
-    {
-        _expenseManager = expenseManager;
-    }
 
     protected override async void OnInitialized()
     {
@@ -81,7 +76,7 @@ else
             return;
         }
 
-        IEnumerable<Expense> expensesFromDb = _expenseManager.LoadAllExpensesByUser(); 
+        IEnumerable<Expense> expensesFromDb = Expense.LoadAllExpensesByUser(); 
         _expenses = [.. expensesFromDb];
 
         if (expensesFromDb.Count().Equals(0))
@@ -105,7 +100,7 @@ else
             _expenses.Add(expense);
 
             // Add to DB
-            if (!_expenseManager.AddExpenseToDb(expense))
+            if (!Expense.AddExpenseToDb(expense))
                 ShowAndLogError();
 
             _newExpense = new Expense();
@@ -118,7 +113,7 @@ else
         _expenses.Remove(expense);
 
         // Delete on DB
-        if (!_expenseManager.DeleteExpenseFromDb(expense))
+        if (!Expense.DeleteExpenseFromDb(expense))
             ShowAndLogError();
     }
 

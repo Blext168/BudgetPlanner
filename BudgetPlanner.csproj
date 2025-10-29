@@ -72,10 +72,27 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.2" />
         <PackageReference Include="MudBlazor" Version="8.3.0" />
         <PackageReference Include="MySql.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="Plugin.Fingerprint" Version="2.1.5" />
         <PackageReference Include="System.Data.OleDb" Version="9.0.2" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\PlannerModel\PlannerModel.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Windows.SDK.NET">
+        <HintPath>..\..\Users\Schiefer\.nuget\packages\microsoft.windows.sdk.net.ref\10.0.19041.57\lib\net8.0\Microsoft.Windows.SDK.NET.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Platforms\iOS\BiometricService.cs">
+        <ExcludeFromCurrentConfiguration>false</ExcludeFromCurrentConfiguration>
+      </Compile>
+      <Compile Update="Platforms\Windows\BiometricService.cs">
+        <ExcludeFromCurrentConfiguration>false</ExcludeFromCurrentConfiguration>
+      </Compile>
       <Compile Update="Properties\Settings.Designer.cs">
         <DesignTimeSharedInput>True</DesignTimeSharedInput>
         <AutoGen>True</AutoGen>

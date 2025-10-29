@@ -1,5 +1,5 @@
-﻿using BudgetPlanner.Model;
-using BudgetPlanner.Result;
+﻿using BudgetPlanner.Result;
+using PlannerModel;
 
 namespace BudgetPlanner.Interfaces;
 
