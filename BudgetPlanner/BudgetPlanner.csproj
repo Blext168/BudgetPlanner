@@ -42,6 +42,61 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+      <AndroidPackageFormat>apk</AndroidPackageFormat>
+      <AndroidEnableMultiDex>False</AndroidEnableMultiDex>
+      <Debugger>Native</Debugger>
+      <EnableLLVM>True</EnableLLVM>
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+      <AndroidEnableMultiDex>False</AndroidEnableMultiDex>
+      <Debugger>Native</Debugger>
+      <EnableLLVM>True</EnableLLVM>
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-windows10.0.19041.0|AnyCPU'">
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-windows10.0.19041.0|AnyCPU'">
+      <ApplicationId>de.schiefer.budgetplanner</ApplicationId>
+      <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+      <ApplicationTitle>Planner</ApplicationTitle>
+    </PropertyGroup>
+
     <ItemGroup>
         <!-- App Icon -->
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />

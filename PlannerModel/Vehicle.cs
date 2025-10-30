@@ -71,7 +71,7 @@ public sealed class Vehicle
     /// kilometers driven exceed the expected kilometers, while a negative value indicates that
     /// the actual kilometers driven are below the expected kilometers.
     /// </returns>
-    private int GetKilometerDifference()
+    public int GetKilometerDifference()
     {
         const double oneYearInDays = 365.0;
         

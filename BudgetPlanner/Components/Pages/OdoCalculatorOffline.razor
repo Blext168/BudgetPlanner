@@ -1,0 +1,173 @@
+﻿@page "/odoCalculatorOffline"
+@using BudgetPlanner.Cache
+@using BudgetPlanner.Classes
+@using PlannerModel
+
+<h1>Kilometer Rechner - Offline</h1>
+<p>Hier kannst du die Fahrleistung von deinen/deinem Auto/Autos verwalten.</p>
+
+<div class="mb-3">
+    <label for="vehicleSelect" class="form-label">Bestehende Fahrzeuge</label>
+    <select id="vehicleSelect" class="form-select" @onchange="OnVehicleChangedAsync">
+        <option value="">-- Neues Fahrzeug anlegen --</option>
+        @foreach (var vehicle in Vehicles)
+        {
+            <option value="@vehicle.Id" selected="@(vehicle.Id == SelectedVehicleId)">@vehicle.LicensePlate</option>
+        }
+    </select>
+</div>
+
+<EditForm Model="Editable" OnValidSubmit="SaveVehicle">
+    <DataAnnotationsValidator/>
+
+    <table class="table table-borderless" style="max-width:700px;">
+        <tbody>
+        <tr>
+            <td style="width:40%">
+                <label class="form-label">Hersteller</label>
+                <div class="form-text">z. B. VW / Volkswagen</div>
+            </td>
+            <td>
+                <InputText class="form-control" @bind-Value="Editable.Manufacturer"/>
+                <ValidationMessage For="() => Editable.Manufacturer"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Modell</label>
+                <div class="form-text">z. B. Golf 3</div>
+            </td>
+            <td>
+                <InputText class="form-control" @bind-Value="Editable.Model"/>
+                <ValidationMessage For="() => Editable.Model"/>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                <label class="form-label">Kennzeichen</label>
+                <div class="form-text">z.B. B-AB 1234</div>
+            </td>
+            <td>
+                <InputText class="form-control" @bind-Value="Editable.LicensePlate"/>
+                <ValidationMessage For="() => Editable.LicensePlate"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Anschaffungsdatum</label>
+                <div class="form-text">Datum des Kaufs</div>
+            </td>
+            <td>
+                <InputDate class="form-control" @bind-Value="Editable.PurchaseDate"/>
+                <ValidationMessage For="() => Editable.PurchaseDate"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Start-Kilometerstand</label>
+                <div class="form-text">Kilometerstand bei Übernahme / Kauf</div>
+            </td>
+            <td>
+                <InputNumber class="form-control" @bind-Value="Editable.InitialOdometer"/>
+                <ValidationMessage For="() => Editable.InitialOdometer"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Aktuelles Datum</label>
+                <div class="form-text">Datum der Messung</div>
+            </td>
+            <td>
+                <InputDate class="form-control" @bind-Value="Editable.CurrentDate"/>
+                <ValidationMessage For="() => Editable.CurrentDate"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Aktueller Kilometerstand</label>
+                <div class="form-text">Kilometerstand heute</div>
+            </td>
+            <td>
+                <InputNumber class="form-control" @bind-Value="Editable.CurrentOdometer"/>
+                <ValidationMessage For="() => Editable.CurrentOdometer"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label class="form-label">Fahrleistung pro Jahr</label>
+                <div class="form-text">Wie viele Kilometer im Jahr gefahren werden fürfen.</div>
+            </td>
+            <td>
+                <InputNumber class="form-control" @bind-Value="Editable.KilometersPerYear"/>
+                <ValidationMessage For="() => Editable.KilometersPerYear"/>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <lable class="@GetResultClass(Editable.GetKilometerDifference())">@Editable.GetKilometerStatus()</lable>
+            </td>
+            <td>
+                <button class="btn custom-btn w-100" type="submit">Speichern</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</EditForm>
+
+@code {
+    private IEnumerable<Vehicle> Vehicles { get; set; } = [];
+    private Vehicle Editable { get; set; } = new(UserCache.UserId);
+    private int SelectedVehicleId { get; set; }
+    private const string STORAGE_FILE_PATH = @"C:\_GITProjekte\BudgetPlanner\VehicleStorage.json";
+    private readonly JsonStorage<Vehicle> _storage = new(STORAGE_FILE_PATH);
+    
+    // ReSharper disable once AsyncVoidMethod
+    protected override async void OnInitialized()
+    {
+        Vehicles = await _storage.LoadAllAsync();
+    }
+
+    private void OnVehicleChangedAsync(ChangeEventArgs e)
+    {
+        SelectedVehicleId = e.Value is not null ? (int)e.Value : 0;
+
+        // Not need to load
+        if (SelectedVehicleId <= 0)
+            return;
+        
+        Vehicle? item = Vehicles.FirstOrDefault(w => w.Id == SelectedVehicleId);
+        if (item != null)
+            // Clone to prevent assignment issues
+            Editable = item.Clone();
+    }
+
+    private async Task SaveVehicle()
+    {
+        if (SelectedVehicleId is 0)
+        {
+            Editable.Id = Vehicles.Count() + 1;
+            await _storage.AddAsync(Editable);
+        }
+        else
+        {
+            bool successful = await _storage.UpdateAsync(Editable);
+    
+            if (!successful)
+                await Application.Current.MainPage.DisplayAlert("Fehler", "Update war nicht Erfolgreich.", "Ok");
+        }
+        
+        // Refresh local list
+        Vehicles = await _storage.LoadAllAsync();
+        SelectedVehicleId = Editable.Id;
+    }
+    
+    private string GetResultClass(int distance)
+        => distance > 0 ? "text-danger font-weight-bold" : "text-success font-weight-bold";
+}
