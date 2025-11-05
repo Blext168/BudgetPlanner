@@ -6,18 +6,18 @@
 <h1>Kilometer Rechner - Offline</h1>
 <p>Hier kannst du die Fahrleistung von deinen/deinem Auto/Autos verwalten.</p>
 
-<div class="mb-3">
-    <label for="vehicleSelect" class="form-label">Bestehende Fahrzeuge</label>
-    <select id="vehicleSelect" class="form-select" @onchange="OnVehicleChangedAsync">
-        <option value="">-- Neues Fahrzeug anlegen --</option>
-        @foreach (var vehicle in Vehicles)
-        {
-            <option value="@vehicle.Id" selected="@(vehicle.Id == SelectedVehicleId)">@vehicle.LicensePlate</option>
-        }
-    </select>
-</div>
-
 <EditForm Model="Editable" OnValidSubmit="SaveVehicle">
+    <div class="mb-3">
+        <label for="vehicleSelect" class="form-label">Bestehende Fahrzeuge</label>
+        <select id="vehicleSelect" class="form-select" @onchange="OnVehicleChangedAsync">
+            <option value="">-- Neues Fahrzeug anlegen --</option>
+            @foreach (Vehicle vehicle in Vehicles)
+            {
+                <option value="@vehicle.Id" selected="@(vehicle.Id == SelectedVehicleId)">@vehicle.LicensePlate</option>
+            }
+        </select>
+    </div>
+
     <DataAnnotationsValidator/>
 
     <table class="table table-borderless" style="max-width:700px;">
@@ -122,25 +122,25 @@
 </EditForm>
 
 @code {
+    private const string STORAGE_FILE_PATH = @"C:\_GITProjekte\BudgetPlanner\VehicleStorage.json";
+    private readonly JsonStorage<Vehicle> _storage = new(STORAGE_FILE_PATH);
     private IEnumerable<Vehicle> Vehicles { get; set; } = [];
     private Vehicle Editable { get; set; } = new(UserCache.UserId);
     private int SelectedVehicleId { get; set; }
-    private const string STORAGE_FILE_PATH = @"C:\_GITProjekte\BudgetPlanner\VehicleStorage.json";
-    private readonly JsonStorage<Vehicle> _storage = new(STORAGE_FILE_PATH);
-    
-    // ReSharper disable once AsyncVoidMethod
-    protected override async void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
-        Vehicles = await _storage.LoadAllAsync();
+        await LoadVehiclesAsync();
     }
+
+    private async Task LoadVehiclesAsync() => Vehicles = await _storage.LoadAllAsync();
 
     private void OnVehicleChangedAsync(ChangeEventArgs e)
     {
-        SelectedVehicleId = e.Value is not null ? (int)e.Value : 0;
-
-        // Not need to load
-        if (SelectedVehicleId <= 0)
+        if (!int.TryParse(e.Value?.ToString(), out int vehicleId) || vehicleId <= 0)
             return;
+
+        SelectedVehicleId = vehicleId;
         
         Vehicle? item = Vehicles.FirstOrDefault(w => w.Id == SelectedVehicleId);
         if (item != null)
@@ -164,7 +164,7 @@
         }
         
         // Refresh local list
-        Vehicles = await _storage.LoadAllAsync();
+        await LoadVehiclesAsync();
         SelectedVehicleId = Editable.Id;
     }
     
