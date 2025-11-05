@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 1,
+    "Manufacturer": "BMW",
+    "Model": "5er | 520i",
+    "LicensePlate": "WHV-DS 168",
+    "PurchaseDate": "2025-07-17T00:00:00",
+    "InitialOdometer": 169700,
+    "CurrentDate": "2025-10-30T00:00:00",
+    "CurrentOdometer": 182000,
+    "KilometersPerYear": 25000,
+    "UserId": 0
+  },
+  {
+    "Id": 2,
+    "Manufacturer": "Renault",
+    "Model": "Kangoo",
+    "LicensePlate": "WHV-MS 500",
+    "PurchaseDate": "2023-05-01T00:00:00",
+    "InitialOdometer": 152000,
+    "CurrentDate": "2025-10-30T00:00:00",
+    "CurrentOdometer": 230123,
+    "KilometersPerYear": 35000,
+    "UserId": 0
+  }
+]

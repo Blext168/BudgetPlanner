@@ -14,7 +14,7 @@ a, .btn-link {
 }
 
 .custom-btn {
-    background: linear-gradient(90deg, #1A237E, #673AB7, #4A148C);
+    background: linear-gradient(135deg, #1A237E, #673AB7, #4A148C);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -25,7 +25,7 @@ a, .btn-link {
 }
 
     .custom-btn:hover {
-        background: linear-gradient(90deg, #4A148C, #673AB7, #1A237E);
+        background: linear-gradient(135deg, #4A148C, #673AB7, #1A237E);
         transform: scale(1.05);
         color: white;
     }
