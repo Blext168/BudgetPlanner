@@ -1,0 +1,198 @@
+@page "/km-check"
+@using System.Globalization
+
+<div class="max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-md mt-10">
+    <h1 class="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+        <i data-lucide="gauge" class="w-6 h-6"></i> Mehr-/Minderkilometer Rechner
+    </h1>
+
+    <table class="w-full text-left border-separate border-spacing-y-4">
+        <tbody>
+            <tr>
+                <td class="w-1/2 pr-4">
+                    <label title="Eindeutiger Name für das Fahrzeug">🚘 Fahrzeugname</label>
+                </td>
+                <td>
+                    <input type="text" @bind="NewVehicleName" class="w-full p-2 border rounded" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label title="Lade ein gespeichertes Fahrzeug">📁 Gespeicherte Fahrzeuge</label>
+                </td>
+                <td>
+                    <select @onchange="LoadVehicleAsync" class="w-full p-2 border rounded">
+                        <option value="">-- Fahrzeug wählen --</option>
+                        @foreach (var name in Vehicles.Keys)
+                        {
+                            <option value="@name">@name</option>
+                        }
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label title="Monat und Jahr der Anschaffung">📅 Anschaffungsdatum</label>
+                </td>
+                <td>
+                    <input type="month" @bind="PurchaseDate" class="w-full p-2 border rounded" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label title="Kilometerstand beim Kauf">🔢 Start-Kilometerstand</label>
+                </td>
+                <td>
+                    <input type="number" @bind="StartKm" class="w-full p-2 border rounded" min="0" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label title="Aktueller Kilometerstand">🚗 Aktueller Kilometerstand</label>
+                </td>
+                <td>
+                    <input type="number" @bind="CurrentKm" class="w-full p-2 border rounded" min="0" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label title="Datum, an dem der Kilometerstand ausgelesen wurde">📆 Datum der Auslesung</label>
+                </td>
+                <td>
+                    <input type="date" @bind="ReadingDate" class="w-full p-2 border rounded" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label title="Wie viele Kilometer pro Jahr durchschnittlich gefahren werden">📈 Jährliche Fahrleistung (km)</label>
+                </td>
+                <td>
+                    <input type="number" @bind="AnnualKm" class="w-full p-2 border rounded" min="0" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="mt-6 border-t pt-4">
+        <h2 class="text-xl font-semibold mb-2 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-5 h-5"></i> Ergebnisse:
+        </h2>
+        @if (IsValidInput)
+        {
+                <ul class="space-y-2">
+                    <li><strong>📅 Vergangene Tage:</strong> @DaysElapsed</li>
+                    <li><strong>📏 Theoretisch gefahrene km:</strong> @ExpectedKm.ToString("N0")</li>
+                    <li><strong>📊 Tatsächlich gefahrene km:</strong> @ActualKm.ToString("N0")</li>
+                    <li>
+                        <strong>📌 Mehr-/Minderkilometer:</strong>
+                        <span class="@((KmDelta >= 0 ? "text-green-600" : "text-red-600")) font-bold">
+                        @(KmDelta >= 0 ? "+" : "")@KmDelta.ToString("N0") km
+                        </span>
+                    </li>
+                </ul>
+        }
+        else
+        {
+                <p class="text-gray-600">Bitte alle Felder korrekt ausfüllen, um das Ergebnis zu sehen.</p>
+        }
+    </div>
+
+    <div >
+        <button @onclick="SaveVehicleAsync" class="custom-btn">
+            <i data-lucide="save" class="w-5 h-5"></i> Fahrzeug speichern
+        </button>
+    </div>
+</div>
+
+
+
+@code {
+    private string SelectedVehicleName { get; set; } = "";
+    private string NewVehicleName { get; set; } = "";
+
+    private DateTime PurchaseDate { get; set; } = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private int StartKm { get; set; }
+    private int CurrentKm { get; set; }
+    private DateTime ReadingDate { get; set; } = DateTime.Today;
+    private int AnnualKm { get; set; }
+
+    private Dictionary<string, VehicleData> Vehicles { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVehiclesAsync();
+    }
+
+    private bool IsValidInput =>
+        !string.IsNullOrWhiteSpace(NewVehicleName) &&
+        StartKm >= 0 &&
+        CurrentKm >= StartKm &&
+        AnnualKm > 0 &&
+        ReadingDate > PurchaseDate;
+
+    private int DaysElapsed => (ReadingDate - PurchaseDate).Days;
+    private double ExpectedKm => (DaysElapsed / 365.0) * AnnualKm;
+    private int ActualKm => CurrentKm - StartKm;
+    private int KmDelta => ActualKm - (int)Math.Round(ExpectedKm);
+
+    private async Task SaveVehicleAsync()
+    {
+        if (!IsValidInput) return;
+
+        var vehicle = new VehicleData
+            {
+                Name = NewVehicleName,
+                PurchaseDate = PurchaseDate,
+                StartKm = StartKm,
+                CurrentKm = CurrentKm,
+                ReadingDate = ReadingDate,
+                AnnualKm = AnnualKm
+            };
+
+        Vehicles[vehicle.Name] = vehicle;
+        await SaveVehiclesAsync();
+        SelectedVehicleName = vehicle.Name;
+    }
+
+    private async Task LoadVehicleAsync(ChangeEventArgs e)
+    {
+        if (Vehicles.TryGetValue(e.Value?.ToString() ?? "", out var vehicle))
+        {
+            SelectedVehicleName = vehicle.Name;
+            NewVehicleName = vehicle.Name;
+            PurchaseDate = vehicle.PurchaseDate;
+            StartKm = vehicle.StartKm;
+            CurrentKm = vehicle.CurrentKm;
+            ReadingDate = vehicle.ReadingDate;
+            AnnualKm = vehicle.AnnualKm;
+        }
+    }
+
+    private async Task SaveVehiclesAsync()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(Vehicles);
+        await JS.InvokeVoidAsync("localStorage.setItem", "vehicles", json);
+    }
+
+    private async Task LoadVehiclesAsync()
+    {
+        var json = await JS.InvokeAsync<string>("localStorage.getItem", "vehicles");
+        if (!string.IsNullOrWhiteSpace(json))
+        {
+            Vehicles = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, VehicleData>>(json)
+                       ?? new();
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private class VehicleData
+    {
+        public string Name { get; set; } = "";
+        public DateTime PurchaseDate { get; set; }
+        public int StartKm { get; set; }
+        public int CurrentKm { get; set; }
+        public DateTime ReadingDate { get; set; }
+        public int AnnualKm { get; set; }
+    }
+}
