@@ -7,7 +7,7 @@
         public decimal Amount { get; set; }
         public bool OneTime { get; set; }
         public DateTime? MonthOfExpense { get; set; }
-        public int DayInMonth { get; set; } = 1;
+        public int DayInMonth { get; set; } = DateTime.Now.Day;
         public int UserId { get; set; }
     }
 }
