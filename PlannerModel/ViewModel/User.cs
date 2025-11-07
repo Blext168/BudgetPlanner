@@ -1,8 +1,8 @@
-﻿namespace PlannerModel
+﻿namespace PlannerModel.ViewModel
 {
-    public class User
+    public sealed class User
     {
-        public int Id { get; set; }
+        public int Id { get; }
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;

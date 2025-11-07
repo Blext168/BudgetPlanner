@@ -1,5 +1,5 @@
 ﻿using BudgetPlanner.Result;
-using PlannerModel;
+using PlannerModel.ViewModel;
 
 namespace BudgetPlanner.Interfaces;
 

@@ -2,7 +2,7 @@
 using BudgetPlanner.Interfaces;
 using BudgetPlanner.Model;
 using Microsoft.EntityFrameworkCore;
-using PlannerModel;
+using PlannerModel.ViewModel;
 
 namespace BudgetPlanner.Manager
 {

@@ -1,8 +1,6 @@
-using System;
-
-namespace KilometerRechner.Models
+namespace PlannerModel.ViewModel
 {
-    public class FahrzeugDaten
+    public sealed class FahrzeugDaten
     {
         public string FahrzeugName { get; set; } = string.Empty;
         public DateTime Anschaffungsdatum { get; set; }

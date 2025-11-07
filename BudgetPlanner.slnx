@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BudgetPlanner/BudgetPlanner.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="PlannerModel/PlannerModel.csproj" />
+</Solution>

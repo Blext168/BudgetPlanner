@@ -1,7 +1,7 @@
 ﻿@page "/register"
 @using BudgetPlanner.Cache
 @using BudgetPlanner.Interfaces
-@using PlannerModel
+@using PlannerModel.Extensions
 @inject IBiometricService Biometric
 @inject NavigationManager Navigation
 
@@ -70,29 +70,8 @@
 
     private async void RegisterUser()
     {
-        if (string.IsNullOrWhiteSpace(_user.Name)
-            || string.IsNullOrWhiteSpace(_user.Email)
-            || string.IsNullOrWhiteSpace(_user.Password)
-            || string.IsNullOrWhiteSpace(_user.Password2))
-        {
-            _message = "Bitte fülle alle Felder aus!";
+        if (!await ValidateAsync())
             return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_user.Password)
-            || string.IsNullOrWhiteSpace(_user.Password2)
-            || _user.Password != _user.Password2)
-        {
-            _message = "Das Passwort muss übereinstimmen!";
-            return;
-        }
-
-        bool nameAvailable = await _userManager.UsernameAvailableAsync(_user.Name);
-        if (!nameAvailable)
-        {
-            _message = "Der Name ist bereits vergeben";
-            return;
-        }
 
         bool successful = await _userManager.RegisterUserAsync(new User
             {
@@ -122,6 +101,47 @@
         }
         else
             _message = "Es ist ein Fehler bei der Registrierung aufgetreten.";
+    }
+
+    private async Task<bool> ValidateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_user.Name)
+            || string.IsNullOrWhiteSpace(_user.Email)
+            || string.IsNullOrWhiteSpace(_user.Password)
+            || string.IsNullOrWhiteSpace(_user.Password2))
+        {
+            _message = "Bitte fülle alle Felder aus!";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(_user.Password)
+            || string.IsNullOrWhiteSpace(_user.Password2)
+            || _user.Password != _user.Password2)
+        {
+            _message = "Das Passwort muss übereinstimmen!";
+            return false;
+        }
+
+        bool nameAvailable = await _userManager.UsernameAvailableAsync(_user.Name);
+        if (!nameAvailable)
+        {
+            _message = "Der Name ist bereits vergeben";
+            return false;
+        }
+
+        if (!_user.Password.HasCapitalLetter()
+            || !_user.Password.HasLowerLetter()
+            || !_user.Password.HasDigit()
+            || !_user.Password.HasPunctuation()
+            || !_user.Password.HasEightOrMoreCharacters())
+        {
+            _message = "Das Passwort erfüllt nicht die Anforderungen!" +
+                "Anforderungen: Mindestens 8 Zeichen, ein Groß- & Kleinbuchstaben, eine Zahl und ein Sonderzeichen.";
+
+            return false;
+        }
+
+        return true;
     }
 
     private Task<bool> AskUserAsync(string message)

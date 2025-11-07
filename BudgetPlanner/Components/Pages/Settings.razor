@@ -1,0 +1,54 @@
+﻿@page "/settings"
+@using BudgetPlanner.Cache
+@using PlannerModel.Enums
+
+<h1>Settings</h1>
+<p>Hier kannst du Einstellungen für deinen Account festlegen.</p>
+
+<EditForm Model="ViewModel" OnValidSubmit="SaveSettings">
+
+    <DataAnnotationsValidator />
+
+    <table class="table table-borderless" style="max-width:700px">
+        <tbody>
+            <tr>
+                <td style="width:40%">
+                    <label class="form-label">Design</label>
+                    <div class="form-text">Wähle ein Design aus.</div>
+                </td>
+                <td>
+                    <InputSelect class="form-control" @bind-Value="ViewModel.DarkMode">
+                        @foreach (var mode in Enum.GetValues(typeof(DarkModeEnum)))
+                        {
+                            <option value="@mode">@mode</option>
+                        }
+                    </InputSelect>
+                    @* currently no validation needed *@
+                    @* <ValidationMessage For="() => ViewModel.DarkMode" /> *@
+                </td>
+                <td>
+                    <lable class="form-label">Währung</lable>
+                    <div class="from-text">z.B. "EUR | Euro"</div>
+                </td>
+                <td>
+                    <InputSelect class="form-control" @bind-Value="ViewModel.PreferredCurrency">
+                        @foreach(var currency in Enum.GetValues(typeof(CurrencyCodeEnum)))
+                        {
+                            <option value="@currency">@currency.Code | @currency.Name</option>
+                        }
+)
+                    </InputSelect>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</EditForm>
+
+@code {
+    private PlannerModel.ViewModel.Settings ViewModel = new() { UserId = UserCache.UserId };
+
+    private async Task SaveSettings()
+    {
+        
+    }
+}

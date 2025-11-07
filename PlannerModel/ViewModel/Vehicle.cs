@@ -1,30 +1,31 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PlannerModel.Extensions;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 
-namespace PlannerModel;
+namespace PlannerModel.ViewModel;
 
 public sealed class Vehicle
 {
     public int Id { get; set; }
 
     [Required(ErrorMessage = "Bitte Hersteller angeben")]
-    public string Manufacturer { get; set; }
+    public string? Manufacturer { get; set; }
     
     [Required(ErrorMessage = "Bitte Modell angeben")]
-    public string Model { get; set; }
+    public string? Model { get; set; }
     
     [Required(ErrorMessage = "Bitte Kennzeichen eingeben")]
-    public string LicensePlate { get; set; }
+    public string? LicensePlate { get; set; }
 
     [Required(ErrorMessage = "Bitte Kaufdatum eingeben")]
-    public DateTime PurchaseDate { get; set; }
+    public DateTime PurchaseDate { get; set; } = DateTime.Now.LastMonth().FirstOfMonth();
 
     [Required(ErrorMessage = "Bitte Kilometerstand beim Kauf eingeben")]
     [Range(0, int.MaxValue, ErrorMessage = "Kilometerstand muss positiv sein")]
     public int InitialOdometer { get; set; }
 
     [Required(ErrorMessage = "Bitte aktuelles Datum eingeben")]
-    public DateTime CurrentDate { get; set; }
+    public DateTime CurrentDate { get; set; } = DateTime.Now;
 
     [Required(ErrorMessage = "Bitte aktuellen Kilometerstand eingeben")]
     [Range(0, int.MaxValue, ErrorMessage = "Kilometerstand muss positiv sein")]
@@ -41,14 +42,12 @@ public sealed class Vehicle
         UserId = userId;
     }
 
-    private Vehicle() { }
-
     /// <summary>
     /// Clone the current instance of the vehicle to prevent binding issues.
     /// </summary>
     /// <returns>Clone of instance</returns>
     public Vehicle Clone() =>
-        new()
+        new(UserId)
         {
             Id = Id,
             Manufacturer = Manufacturer,
@@ -58,8 +57,7 @@ public sealed class Vehicle
             InitialOdometer = InitialOdometer,
             CurrentDate = CurrentDate,
             CurrentOdometer = CurrentOdometer,
-            KilometersPerYear = KilometersPerYear,
-            UserId = UserId
+            KilometersPerYear = KilometersPerYear
         };
     
     /// <summary>

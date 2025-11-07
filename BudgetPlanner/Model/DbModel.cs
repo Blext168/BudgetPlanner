@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PlannerModel;
+using PlannerModel.ViewModel;
 
 namespace BudgetPlanner.Model
 {

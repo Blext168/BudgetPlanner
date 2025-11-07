@@ -1,8 +1,8 @@
-﻿namespace PlannerModel
+﻿namespace PlannerModel.ViewModel
 {
-    public class Expense
+    public sealed class Expense
     {
-        public int Id { get; set; }
+        public int Id { get; }
         public string Name { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public bool OneTime { get; set; }
