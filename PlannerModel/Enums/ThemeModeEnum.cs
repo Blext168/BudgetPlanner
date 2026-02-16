@@ -1,9 +1,8 @@
 ﻿namespace PlannerModel.Enums
 {
-    public enum DarkModeEnum
+    public enum ThemeModeEnum
     {
         Light = 0,
-        Dark = 1,
-        System = 2
+        Dark = 1
     }
 }

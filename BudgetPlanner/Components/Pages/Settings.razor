@@ -1,6 +1,10 @@
 ﻿@page "/settings"
 @using BudgetPlanner.Cache
+@using BudgetPlanner.Services
+@using PlannerModel.Classes
 @using PlannerModel.Enums
+@inject NavigationManager Navigation
+@inject ThemeService ThemeService;
 
 <h1>Settings</h1>
 <p>Hier kannst du Einstellungen für deinen Account festlegen.</p>
@@ -17,8 +21,8 @@
                     <div class="form-text">Wähle ein Design aus.</div>
                 </td>
                 <td>
-                    <InputSelect class="form-control" @bind-Value="ViewModel.DarkMode">
-                        @foreach (var mode in Enum.GetValues(typeof(DarkModeEnum)))
+                    <InputSelect class="form-control" @bind-Value="theme">
+                        @foreach (var mode in Enum.GetValues(typeof(ThemeModeEnum)))
                         {
                             <option value="@mode">@mode</option>
                         }
@@ -26,17 +30,18 @@
                     @* currently no validation needed *@
                     @* <ValidationMessage For="() => ViewModel.DarkMode" /> *@
                 </td>
+            </tr>
+            <tr>
                 <td>
                     <lable class="form-label">Währung</lable>
                     <div class="from-text">z.B. "EUR | Euro"</div>
                 </td>
                 <td>
-                    <InputSelect class="form-control" @bind-Value="ViewModel.PreferredCurrency">
-                        @foreach(var currency in Enum.GetValues(typeof(CurrencyCodeEnum)))
+                    <InputSelect class="form-control" @bind-Value="ViewModel.PreferredCurrencyId">
+                        @foreach(var currency in CurrencyCache.Currencies)
                         {
-                            <option value="@currency">@currency.Code | @currency.Name</option>
+                            <option value="@currency.Code">@currency.Name | @currency.Code</option>
                         }
-)
                     </InputSelect>
                 </td>
             </tr>
@@ -46,6 +51,29 @@
 
 @code {
     private PlannerModel.ViewModel.Settings ViewModel = new() { UserId = UserCache.UserId };
+    private ThemeModeEnum theme
+    {
+        get => ThemeService.CurrentTheme;
+        set => ThemeService.SetTheme(value);
+    }
+
+    protected override async void OnInitialized()
+    {
+        // if (UserCache.UserId <= 0)
+        // {
+        //     await Application.Current.MainPage.DisplayAlert(
+        //         "Nicht möglich",
+        //         "Du musst eingeloggt sein, um diese Seite nutzen zu können. Möchtest du Offline fortfahren?",
+        //         "Ok");
+
+        //     Navigation.NavigateTo("/");
+        // }
+    }
+
+    private async void OnModeValueChanged()
+    {
+        
+    }
 
     private async Task SaveSettings()
     {

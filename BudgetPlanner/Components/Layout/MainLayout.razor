@@ -1,4 +1,10 @@
-﻿@inherits LayoutComponentBase
+﻿@using BudgetPlanner.Services
+@using PlannerModel.Enums
+@using System.Threading.Tasks
+@inject ThemeService ThemeService
+@inject IJSRuntime JS
+@inherits LayoutComponentBase
+@implements IDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -10,8 +16,29 @@
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
 
-        <article class="content px-4">
+        <article data-theme="@GetTheme()" class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+@code {
+    private DotNetObjectReference<ThemeService>? _dotNetRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dotNetRef = DotNetObjectReference.Create(ThemeService);
+        await JS.InvokeVoidAsync("themeHelper.watch", _dotNetRef);
+
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    private string GetTheme()
+        => ThemeService.CurrentTheme == ThemeModeEnum.Dark ? "dark" : "light";
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+        _dotNetRef?.Dispose();
+    }
+}

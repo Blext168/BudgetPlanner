@@ -1,5 +1,6 @@
 ﻿using BudgetPlanner.Interfaces;
 using BudgetPlanner.Manager;
+using BudgetPlanner.Services;
 using Microsoft.Extensions.Logging;
 
 namespace BudgetPlanner
@@ -33,7 +34,7 @@ namespace BudgetPlanner
 #else
             builder.Services.AddSingleton<IBiometricService, BudgetPlanner.Classes.DummyBiometricService>();
 #endif
-
+            builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddScoped<IExpenseManager, ExpenseManager>();
             builder.Services.AddScoped<IVehicleManager, VehicleManager>();
             builder.Services.AddScoped<IUserManager, UserManager>();
